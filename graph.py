@@ -143,4 +143,4 @@ start_node = 'S'
 target_node = 'G'
 
 a_star_path = a_star_search(graph, start_node, target_node, heuristic)
-print("The following is the A* Search Path:", a_star_path)
+print("\nThe following is the A* Search Path:\n", a_star_path)
