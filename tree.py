@@ -19,7 +19,7 @@ graph = {
 }
 
 # Heuristic function for A* Search (you can replace this with your own heuristic)
-heuristic = {
+heuristics = {
     'S': 7,
     'A': 5,
     'B': 7,
@@ -31,114 +31,239 @@ heuristic = {
 print('\t\t\nFOR TREE SEARCH;')
 
 #Code for depth first search
-def dfs_tree_search(graph, start):
-    visited = set()
-    stack = [start]
+def depth_first_tree_search(graph, startNode, goalNode):
+    stack = [(startNode, [startNode])] 
+    
     while stack:
-        current_node = stack.pop()
-        if current_node not in visited:
-            print(current_node, end=" ")
-            visited.add(current_node)
-            stack.extend(neighbor for neighbor in graph[current_node] if neighbor not in visited)
+        node, path = stack.pop()
+        if node == goalNode:
+            return path  
+        
+        nodeNeighbours = graph.get(node, {})
+        
+        for neighbour in reversed(sorted(list(nodeNeighbours.keys()))):
+            new_path = path + [neighbour] 
+            stack.append((neighbour, new_path))  
+                   
+    return None
 
-# Driver code
-start_node = 'S'
-print("\nThe following is the Depth-First Search;")
-dfs_tree_search(graph, start_node)
+# Calling the function
+startNode = 'S'
+goalNode = 'G'
+tree_path = depth_first_tree_search(graph, startNode, goalNode)
+
+if tree_path:
+    print("\nOrder of DFS-tree states expansion: ( ", " -> ".join(tree_path), " )")
+
+    explored_nodes = list(dict.fromkeys(tree_path)) 
+    print("Explored nodes: [", " , ".join(explored_nodes), "] ")
+    
+    unexplored_nodes = list(set(graph.keys()) - set(tree_path))
+    if unexplored_nodes:
+        print("Unexplored nodes: [", " , ".join(unexplored_nodes), "] ")
+    else:
+        print("Unexplored nodes: \"All nodes have been explored\" ")
+
+else:
+    print("\nNo path found.")
 
 
 #Code for BREADTH first search
-def bfs_tree_search(graph, start):
-    visited = set()
-    queue = [start]
+def breadth_first_tree_search(graph, startNode, goalNode):
+    queue = [(startNode, [startNode])] 
+    
     while queue:
-        current_node = queue.pop(0)
-        if current_node not in visited:
-            print(current_node, end=" ")
-            visited.add(current_node)
-            queue.extend(neighbor for neighbor in graph[current_node] if neighbor not in visited)
+        node, path = queue.pop(0)
 
-# Driver code
-start_node = 'S'
-print("\n\nThe following is the Breadth-First Search;")
-bfs_tree_search(graph, start_node)
+        if node == goalNode:
+            return path 
+        
+        nodeNeighbours = graph.get(node, {})
+        count = len(nodeNeighbours.keys())
+        
+        for neighbour in sorted(list(nodeNeighbours.keys())):
+            path.append(neighbour)
+        
+            if neighbour == goalNode:
+                return path
+
+        i=0
+        while i < count:
+            new_node = path[-count+i]
+            if new_node != startNode:
+                queue.append((new_node,path))
+                # print('current path is : ', path)
+                # print('"new node to visit"', path[-count+i])
+                i+=1
+    return None
+
+# calling the function
+startNode = 'S'
+goalNode = 'G'
+tree_path = breadth_first_tree_search(graph, startNode, goalNode)
+
+
+if tree_path:
+    print("\nOrder of BFS tree Search Path expansion: ( ", " -> ".join(tree_path) , " )")
+
+    explored_nodes = list(dict.fromkeys(tree_path)) 
+    print("Explored nodes: [", " , ".join(explored_nodes), "] ")
+
+    unexplored_nodes = list(set(graph.keys()) - set(tree_path))
+    if unexplored_nodes:
+        print("Unexplored nodes: [", " , ".join(unexplored_nodes), "] ")
+    else:
+        print("Unexplored nodes: \"All nodes have been explored\" ")
+    
+else:
+    print("\nNo path found.")
 
 
 #Code for Uniform cost search
-import queue
-def ucs_tree_search(my_graph, start, goal):
-    q = queue.PriorityQueue()
-    q.put((0, [start]))
-    while not q.empty():
-        current_tuple = q.get()
-        if current_tuple[1][-1] == goal:  # Check if the current node is the goal
-            return current_tuple[1], current_tuple[0]  # Return both the path and the cost
-        current_vertex = current_tuple[1][-1]
-        children = list(my_graph[current_vertex].items())
-        for child, child_cost in children:
-            cost = current_tuple[0] + child_cost
-            path = current_tuple[1].copy()
-            path.append(child)
-            node = (cost, path)  # Include both cost and path in the tuple
-            q.put(node)
-    
-    return None  # Return None if the goal is not found
+import heapq
+def uniform_cost_search(graph, start, goal):
+    priority_queue = [(0, start)]
+    cost_so_far = {node: float('inf') for node in graph}
+    cost_so_far[start] = 0
+    parent = {}
 
-if __name__ == '__main__':
-    result, cost = ucs_tree_search(graph, 'S', 'G')
-    if result:
-        print(f"\n\nUCS Tree Search: Path from 'S' to 'G' is {result}")
-        print(f"UCS Tree Search: Total cost is {cost}")
-    else:
-        print("UCS Tree Search: No path found from 'S' to 'G'")
-  
+    while priority_queue:
+        current_cost, current_node = heapq.heappop(priority_queue)
 
-#Code for Greedy search  
-import queue
-def greedy_search(graph, start, goal, heuristic):
-    q = queue.PriorityQueue()
-    q.put((heuristic[start], [start]))  # Include the path in the queue
-    while not q.empty():
-        _, current_path = q.get()
-        current_vertex = current_path[-1]  # Get the current node from the path
-        if current_vertex == goal:
-            return current_path
-        for neighbor, _ in graph[current_vertex].items():
-            if neighbor not in current_path:  # Avoid loops
-                new_path = current_path + [neighbor]  # Extend the path
-                q.put((heuristic[neighbor], new_path))
-    return None
+        if current_node == goal:
+            path = []
+            while current_node:
+                path.insert(0, current_node)
+                current_node = parent.get(current_node)
+            return cost_so_far[goal], path
 
-# Driver code
+        for neighbour, edge_cost in graph[current_node].items():
+            new_cost = cost_so_far[current_node] + edge_cost
+
+            if new_cost < cost_so_far[neighbour]:
+                cost_so_far[neighbour] = new_cost
+                heapq.heappush(priority_queue, (new_cost, neighbour))
+                parent[neighbour] = current_node
+
+    return None, None
+
 start_node = 'S'
 goal_node = 'G'
-result = greedy_search(graph, start_node, goal_node, heuristic)
-if result:
-    print(f"\nThe following is the Greedy Search;\n{result}")
+tree_path, path = uniform_cost_search(graph, start_node, goal_node)
+
+if tree_path is not None:
+    print(f"\nUniform Cost Search: The cost from node \"{start_node}\" to node \"{goal_node}\" is:  {tree_path}")
+    print(f"Order of Uniform cost state expansion: ( {' -> '.join(path)} )")
+
+    explored_nodes = list(dict.fromkeys(path)) 
+    print("Explored nodes: [", " , ".join(explored_nodes), "] ")
+
+    unexplored_nodes = list(set(graph.keys()) - set(path))
+    if unexplored_nodes:
+        print("Unexplored nodes: [", " , ".join(unexplored_nodes), "] ")
+    else:
+        print("Unexplored nodes: \"All nodes have been explored\" ")
 else:
-    print(f"Greedy Search: No path found from {start_node} to {goal_node}")
+    print(f"Uniform Cost Search: There is no path from {start_node} to {goal_node}")
+
+
+#Code for Greedy search  
+import heapq
+def greedy_search(graph, heuristics, start, goal):
+    path = []
+    
+    if startNode not in graph:
+            error = "\n\"ERROR!!!\": The Start Node must be in the graph"
+            return error
+        
+    if goalNode not in graph: 
+        error = "\n\"ERROR!!!\": The Goal Node must be in the graph"
+        return error
+    
+    path.append(start)
+    
+    while path:
+        current_node = path[-1]
+        
+        if current_node == goal:
+            return path
+        
+        neighbors = graph[current_node]
+        
+        if not neighbors:
+            path.pop() # If there are no neighbors, backtrack
+        else:
+            min_neighbor = min(neighbors, key=lambda neighbor: heuristics[neighbor])
+            path.append(min_neighbor)
+
+startNode = 'S'
+goalNode = 'G'
+path = greedy_search(graph, heuristics, startNode, goalNode)
+
+if path:
+    print(f"\nOrder of Greedy Search State expansion from \"{startNode}\" to \"{goalNode}\" :  ( {' -> '.join(path)} )")
+
+    explored_nodes = list(dict.fromkeys(path)) 
+    print("Explored nodes: [", " , ".join(explored_nodes), "] ")
+
+    unexplored_nodes = list(set(graph.keys()) - set(path))
+    if unexplored_nodes:
+        print("Unexplored nodes: [", " , ".join(unexplored_nodes), "] ")
+    else:
+        print("Unexplored nodes: \"All nodes have been explored\" ")
+
+else:
+    print("Path not found")
 
 
 #Code for A* search
-import queue
-def a_star_search(graph, start, goal, heuristic):
-    q = queue.PriorityQueue()
-    q.put((0, start, []))
-    while not q.empty():
-        cost, current_vertex, path = q.get()
-        if current_vertex == goal:
-            return path + [current_vertex]
-        for neighbor, edge_cost in graph[current_vertex].items():
-            new_cost = cost + edge_cost
-            new_path = path + [current_vertex]
-            q.put((new_cost + heuristic[neighbor], neighbor, new_path))
+import heapq
+def astar_search(graph, heuristics, start, goal):
+    open_nodes = [(0, start)]
+    
+    g_cost = {node: float('inf') for node in graph}
+    g_cost[start] = 0
+    parent_nodes = {}
+    
+    while open_nodes:
+        f_cost, current_node = heapq.heappop(open_nodes) #lowest priority
+        
+        if current_node == goal:
+            path = []
+            while current_node in parent_nodes:
+                path.insert(0, current_node)
+                current_node = parent_nodes[current_node]
+            path.insert(0, start)
+            return path
+        
+        for neighbor, cost in graph[current_node].items():
+            tentative_g_cost = g_cost[current_node] + cost
+            
+            if tentative_g_cost < g_cost[neighbor]:
+                g_cost[neighbor] = tentative_g_cost
+                
+                f_cost = tentative_g_cost + heuristics[neighbor]
+                heapq.heappush(open_nodes, (f_cost, neighbor))
+                
+                parent_nodes[neighbor] = current_node
+    
     return None
 
-# Driver code
-start_node = 'S'
-goal_node = 'G'
-result = a_star_search(graph, start_node, goal_node, heuristic)
-if result:
-    print(f"\nThe following is the A* Search;\n{result}")
+startNode = 'S'
+goalNode = 'G'
+path = astar_search(graph, heuristics, startNode, goalNode)
+
+if path:
+    print(f"\nOrder of A* search State expansion from \"{startNode}\" to \"{goalNode}\" :  ( {' -> '.join(path)} )")
+
+    explored_nodes = list(dict.fromkeys(path)) 
+    print("Explored nodes: [", " , ".join(explored_nodes), "] ")
+
+    unexplored_nodes = list(set(graph.keys()) - set(path))
+    if unexplored_nodes:
+        print("Unexplored nodes: [", " , ".join(unexplored_nodes), "] ")
+    else:
+        print("Unexplored nodes: \"All nodes have been explored\" ")
+
 else:
-    print(f"A* Search: No path found from {start_node} to {goal_node}")
+    print("Path not found")

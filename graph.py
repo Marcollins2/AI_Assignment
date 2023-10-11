@@ -127,30 +127,20 @@ else:
 
 
 #Code for A* search
-import queue
-def a_star_search_graph(graph, start, goal, heuristic):
-    q = queue.PriorityQueue()
-    visited = set()  # Track visited nodes
-    q.put((0, start, []))
-    while not q.empty():
-        cost, current_vertex, path = q.get()
-        if current_vertex == goal:
-            return path + [current_vertex]
-        visited.add(current_vertex)  # Mark the current node as visited
-        for neighbor, edge_cost in graph[current_vertex].items():
-            if neighbor not in visited:
-                new_cost = cost + edge_cost
-                new_path = path + [current_vertex]
-                q.put((new_cost + heuristic[neighbor], neighbor, new_path))
-    return None
-
-# Driver code
+def a_star_search(graph, start, target, heuristics):
+    priority_queue = [(heuristics[start], 0, start, [start])]
+    while priority_queue:
+        (_, cost, node, path) = priority_queue.pop(0)
+        if node == target:
+            return path
+        neighbors = graph[node]
+        for neighbor, neighbor_cost in sorted(neighbors.items(), key=lambda x: heuristics[x[0]]):
+            if neighbor not in path:
+                new_cost = cost + neighbor_cost
+                priority_queue.append((new_cost + heuristics[neighbor], new_cost, neighbor, path + [neighbor]))
+                priority_queue.sort(key=lambda x: x[0])
 start_node = 'S'
-goal_node = 'G'
-result = a_star_search_graph(graph, start_node, goal_node, heuristic)
-if result:
-    print(f"\nThe following is the A* search; \n {result}")
-else:
-    print(f"A* Search: No path found from {start_node} to {goal_node}")
+target_node = 'G'
 
-    
+a_star_path = a_star_search(graph, start_node, target_node, heuristic)
+print("The following is the A* Search Path:", a_star_path)
